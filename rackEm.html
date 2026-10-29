@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billiards Scorekeeper PWA</title>
+
+  <!-- Embedded Web App Manifest for Home Screen Installation -->
+  <link rel="manifest" href='data:application/manifest+json,{
+    "name": "Billiards Scorekeeper PWA",
+    "short_name": "RackScore",
+    "description": "Offline-first 8-ball & 9-ball match scoring app",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#0d1b1e",
+    "theme_color": "#1b4d3e",
+    "icons": [
+      {
+        "src": "data:image/svg+xml,<svg xmlns=%22[suspicious link removed] viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22%231b4d3e%22/><text x=%2250%22 y=%2265%22 font-size=%2250%22 text-anchor=%22middle%22 fill=%22white%22>🎱</text></svg>",
+        "sizes": "192x192 512x512",
+        "type": "image/svg+xml"
+      }
+    ]
+  }'>
+
+  <style>
+    :root {
+      --felt-green: #1b4d3e;
+      --felt-dark: #0d2820;
+      --gold: #f4c430;
+      --bg: #12181b;
+      --card-bg: #1e262c;
+      --text: #e0e6ed;
+      --accent: #00adb5;
+      --danger: #ff2e63;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 12px; }
+
+    header {
+      background: var(--felt-green);
+      padding: 14px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      margin-bottom: 12px;
+    }
+    header h1 { font-size: 1.4rem; color: var(--gold); letter-spacing: 1px; }
+    header p { font-size: 0.8rem; opacity: 0.8; }
+
+    .nav-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+    .tab-btn {
+      flex: 1; padding: 10px; border: none; background: var(--card-bg); color: var(--text);
+      border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    .tab-btn.active { background: var(--felt-green); color: var(--gold); border: 1px solid var(--gold); }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .card { background: var(--card-bg); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #2a343d; }
+    .card h2 { font-size: 1.1rem; color: var(--gold); margin-bottom: 12px; border-bottom: 1px solid #33414d; padding-bottom: 6px; }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; }
+    .form-group input, .form-group select {
+      width: 100%; padding: 10px; background: #0f1418; border: 1px solid #33414d;
+      color: #fff; border-radius: 6px; font-size: 1rem;
+    }
+
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem;
+      font-weight: bold; cursor: pointer; background: var(--accent); color: #fff; transition: 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-danger { background: var(--danger); }
+    .btn-green { background: var(--felt-green); color: var(--gold); border: 1px solid var(--gold); }
+
+    /* Scoreboard Grid */
+    .scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .player-box {
+      background: var(--felt-dark); padding: 14px; border-radius: 8px; text-align: center;
+      border: 2px solid transparent;
+    }
+    .player-box.active { border-color: var(--gold); background: #143d31; }
+    .player-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; }
+    .player-score { font-size: 2.8rem; font-weight: 800; color: var(--gold); line-height: 1; margin: 8px 0; }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; margin: 2px; }
+
+    /* Pool Ball Visualization */
+    .balls-rack { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
+    .ball {
+      width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-weight: bold; font-size: 0.85rem; color: #000;
+      cursor: pointer; user-select: none; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5);
+    }
+    .ball.pocketed { opacity: 0.25; filter: grayscale(1); }
+    .ball-1 { background: #ffd700; }
+    .ball-2 { background: #0055ff; color: #fff; }
+    .ball-3 { background: #ff3333; color: #fff; }
+    .ball-4 { background: #800080; color: #fff; }
+    .ball-5 { background: #ff6600; color: #fff; }
+    .ball-6 { background: #008000; color: #fff; }
+    .ball-7 { background: #800000; color: #fff; }
+    .ball-8 { background: #222; color: #fff; border: 1px solid #555; }
+    .ball-9 { background: repeating-linear-gradient(0deg, #ffd700, #ffd700 8px, #fff 8px, #fff 16px); }
+
+    .history-item {
+      padding: 10px; border-bottom: 1px solid #2a343d; font-size: 0.85rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .history-item:last-child { border-bottom: none; }
+    .status-bar { font-size: 0.75rem; text-align: center; color: #888; margin-top: auto; padding: 6px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🎱 RACKSCORE PWA</h1>
+    <p id="game-subtitle">Billiards Match Tracker</p>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="tab-btn active" onclick="showTab('tab-match')">Active Match</button>
+    <button class="tab-btn" onclick="showTab('tab-setup')">New Match</button>
+    <button class="tab-btn" onclick="showTab('tab-history')">History</button>
+  </div>
+
+  <!-- VIEW 1: ACTIVE MATCH -->
+  <div id="tab-match" class="view active">
+    <div class="scoreboard">
+      <div id="box-p1" class="player-box active" onclick="setActivePlayer(1)">
+        <div class="player-name" id="disp-p1-name">Player 1</div>
+        <div class="player-group" id="disp-p1-group" style="font-size:0.75rem; color:#aaa;">-</div>
+        <div class="player-score" id="disp-p1-score">0</div>
+        <button class="btn-sm btn-green" onclick="addPoint(1, event)">+ Rack</button>
+      </div>
+
+      <div id="box-p2" class="player-box" onclick="setActivePlayer(2)">
+        <div class="player-name" id="disp-p2-name">Player 2</div>
+        <div class="player-group" id="disp-p2-group" style="font-size:0.75rem; color:#aaa;">-</div>
+        <div class="player-score" id="disp-p2-score">0</div>
+        <button class="btn-sm btn-green" onclick="addPoint(2, event)">+ Rack</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Rack Balls Remaining</h2>
+      <div id="rack-container" class="balls-rack">
+        <!-- Generated dynamically based on game type -->
+      </div>
+      <p style="font-size:0.75rem; text-align:center; color:#888;">Tap a ball to mark it as pocketed</p>
+    </div>
+
+    <div class="card">
+      <h2>Match Action Control</h2>
+      <p style="font-size:0.85rem; margin-bottom:8px;">Current Turn: <b id="disp-turn" style="color:var(--gold)">Player 1</b> | Inning: <span id="disp-inning">1</span></p>
+      <div style="display:flex; gap:8px;">
+        <button class="btn" style="background:#444;" onclick="nextInning()">End Turn / Inning</button>
+        <button class="btn btn-danger" onclick="recordFoul()">Record Foul</button>
+      </div>
+      <button class="btn btn-green" style="margin-top:10px;" onclick="finishMatch()">Complete Match & Save</button>
+    </div>
+  </div>
+
+  <!-- VIEW 2: NEW MATCH SETUP -->
+  <div id="tab-setup" class="view">
+    <div class="card">
+      <h2>Start New Match</h2>
+      <div class="form-group">
+        <label>Game Type</label>
+        <select id="setup-game" onchange="toggleGameSetup()">
+          <option value="8-ball">8-Ball (Solids vs Stripes)</option>
+          <option value="9-ball">9-Ball (Sequential 1-9)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Player 1 Name</label>
+        <input type="text" id="setup-p1" value="Player 1">
+      </div>
+      <div class="form-group">
+        <label>Player 2 Name</label>
+        <input type="text" id="setup-p2" value="Player 2">
+      </div>
+      <div class="form-group">
+        <label>Target Race (Racks to Win)</label>
+        <input type="number" id="setup-race" value="5" min="1" max="25">
+      </div>
+      <button class="btn btn-green" onclick="startNewMatch()">Begin Match</button>
+    </div>
+  </div>
+
+  <!-- VIEW 3: MATCH HISTORY -->
+  <div id="tab-history" class="view">
+    <div class="card">
+      <h2>Logged Matches (IndexedDB)</h2>
+      <div id="history-list">
+        <p style="font-size:0.85rem; color:#888;">No saved matches found.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="app-status">PWA Offline Mode Ready</div>
+
+  <script>
+    // --- 1. INDEXEDDB DATABASE ENGINE ---
+    const DB_NAME = 'BilliardsScorekeeperDB';
+    const DB_VERSION = 1;
+    let db;
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const database = e.target.result;
+          if (!database.objectStoreNames.contains('matches')) {
+            database.createObjectStore('matches', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function saveMatchToDB(matchData) {
+      if (!db) await initDB();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('matches', 'readwrite');
+        const store = tx.objectStore('matches');
+        store.add(matchData);
+        tx.oncomplete = () => { loadHistory(); resolve(); };
+        tx.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function loadHistory() {
+      if (!db) await initDB();
+      const tx = db.transaction('matches', 'readonly');
+      const store = tx.objectStore('matches');
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const listContainer = document.getElementById('history-list');
+        const matches = req.result.reverse();
+        if (matches.length === 0) {
+          listContainer.innerHTML = '<p style="font-size:0.85rem; color:#888;">No saved matches found.</p>';
+          return;
+        }
+        listContainer.innerHTML = matches.map(m => `
+          <div class="history-item">
+            <div>
+              <b>${m.gameType.toUpperCase()}</b>: ${m.p1Name} (${m.p1Score}) vs ${m.p2Name} (${m.p2Score})<br>
+              <span style="color:#aaa;">Winner: ${m.winner} | Innings: ${m.innings} | Date: ${new Date(m.timestamp).toLocaleDateString()}</span>
+            </div>
+          </div>
+        `).join('');
+      };
+    }
+
+    // --- 2. MATCH STATE & LOGIC ---
+    let matchState = {
+      gameType: '8-ball',
+      p1Name: 'Player 1',
+      p2Name: 'Player 2',
+      p1Score: 0,
+      p2Score: 0,
+      raceTo: 5,
+      activePlayer: 1,
+      inning: 1,
+      p1Fouls: 0,
+      p2Fouls: 0,
+      pocketedBalls: []
+    };
+
+    function showTab(tabId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function startNewMatch() {
+      matchState.gameType = document.getElementById('setup-game').value;
+      matchState.p1Name = document.getElementById('setup-p1').value || 'Player 1';
+      matchState.p2Name = document.getElementById('setup-p2').value || 'Player 2';
+      matchState.raceTo = parseInt(document.getElementById('setup-race').value) || 5;
+      matchState.p1Score = 0;
+      matchState.p2Score = 0;
+      matchState.activePlayer = 1;
+      matchState.inning = 1;
+      matchState.pocketedBalls = [];
+
+      updateUI();
+      renderRack();
+      showTab('tab-match');
+    }
+
+    function setActivePlayer(pNum) {
+      matchState.activePlayer = pNum;
+      document.getElementById('box-p1').classList.toggle('active', pNum === 1);
+      document.getElementById('box-p2').classList.toggle('active', pNum === 2);
+      document.getElementById('disp-turn').innerText = pNum === 1 ? matchState.p1Name : matchState.p2Name;
+    }
+
+    function addPoint(pNum, event) {
+      if (event) event.stopPropagation();
+      if (pNum === 1) matchState.p1Score++;
+      else matchState.p2Score++;
+      
+      // Reset rack
+      matchState.pocketedBalls = [];
+      renderRack();
+      updateUI();
+    }
+
+    function nextInning() {
+      matchState.inning++;
+      setActivePlayer(matchState.activePlayer === 1 ? 2 : 1);
+      updateUI();
+    }
+
+    function recordFoul() {
+      if (matchState.activePlayer === 1) matchState.p1Fouls++;
+      else matchState.p2Fouls++;
+      alert(`Foul recorded for ${matchState.activePlayer === 1 ? matchState.p1Name : matchState.p2Name}`);
+      nextInning();
+    }
+
+    function renderRack() {
+      const rack = document.getElementById('rack-container');
+      rack.innerHTML = '';
+      const totalBalls = matchState.gameType === '8-ball' ? 15 : 9;
+
+      for (let i = 1; i <= totalBalls; i++) {
+        const ball = document.createElement('div');
+        ball.className = `ball ball-${i} ${matchState.pocketedBalls.includes(i) ? 'pocketed' : ''}`;
+        ball.innerText = i;
+        ball.onclick = () => toggleBall(i);
+        rack.appendChild(ball);
+      }
+    }
+
+    function toggleBall(ballNum) {
+      const idx = matchState.pocketedBalls.indexOf(ballNum);
+      if (idx > -1) matchState.pocketedBalls.splice(idx, 1);
+      else matchState.pocketedBalls.push(ballNum);
+      renderRack();
+    }
+
+    function updateUI() {
+      document.getElementById('disp-p1-name').innerText = matchState.p1Name;
+      document.getElementById('disp-p2-name').innerText = matchState.p2Name;
+      document.getElementById('disp-p1-score').innerText = matchState.p1Score;
+      document.getElementById('disp-p2-score').innerText = matchState.p2Score;
+      document.getElementById('disp-inning').innerText = matchState.inning;
+      document.getElementById('game-subtitle').innerText = `${matchState.gameType.toUpperCase()} (Race to ${matchState.raceTo})`;
+      setActivePlayer(matchState.activePlayer);
+    }
+
+    async function finishMatch() {
+      const winner = matchState.p1Score >= matchState.p2Score ? matchState.p1Name : matchState.p2Name;
+      const matchRecord = {
+        gameType: matchState.gameType,
+        p1Name: matchState.p1Name,
+        p2Name: matchState.p2Name,
+        p1Score: matchState.p1Score,
+        p2Score: matchState.p2Score,
+        winner: winner,
+        innings: matchState.inning,
+        timestamp: Date.now()
+      };
+
+      await saveMatchToDB(matchRecord);
+      alert(`Match Complete! Winner: ${winner}`);
+      showTab('tab-history');
+    }
+
+    // --- 3. INLINE SERVICE WORKER & CACHE REGISTRATION ---
+    if ('serviceWorker' in navigator) {
+      const swCode = `
+        const CACHE_NAME = 'billiards-pwa-v1';
+        self.addEventListener('install', (e) => {
+          self.skipWaiting();
+        });
+        self.addEventListener('activate', (e) => {
+          e.waitUntil(clients.claim());
+        });
+        self.addEventListener('fetch', (e) => {
+          e.respondWith(
+            caches.match(e.request).then((res) => res || fetch(e.request).catch(() => new Response("Offline")))
+          );
+        });
+      `;
+      const blob = new Blob([swCode], { type: 'text/javascript' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      navigator.serviceWorker.register(blobUrl)
+        .then(() => document.getElementById('app-status').innerText = 'PWA Active: Offline Storage & Service Worker Ready')
+        .catch(() => document.getElementById('app-status').innerText = 'Running in Standard Mode');
+    }
+
+    // Initialize Database on Load
+    initDB().then(() => loadHistory());
+    renderRack();
+  </script>
+</body>
+</html>
