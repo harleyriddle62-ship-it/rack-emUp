@@ -151,7 +151,12 @@
         <button class="btn btn-danger" onclick="recordFoul()">Record Foul</button>
       </div>
       <button class="btn btn-green" onclick="finishMatch()">Finish Match & Save Record</button>
+      <button class="btn" style="margin-top:10px;background:#666;" onclick="undoLastAction()">
+        Undo Last Action
+      </button>
+
     </div>
+    
   </div>
 
   <!-- VIEW 2: NEW MATCH SETUP -->
@@ -167,12 +172,21 @@
       </div>
       <div class="form-group">
         <label>Player 1 Name</label>
-        <input type="text" id="setup-p1" value="Player 1">
+        <input type="text" id="setup-p1" value="Player
+          <div>
+          Fouls:
+          <span id="disp-p1-fouls">0</span>
+      </div>
       </div>
       <div class="form-group">
         <label>Player 2 Name</label>
         <input type="text" id="setup-p2" value="Player 2">
       </div>
+      <div>
+        Fouls:
+        <span id="disp-p2-fouls">0</span>
+      </div>
+
       <div class="form-group">
         <label>Target Race (Racks to Win)</label>
         <input type="number" id="setup-race" value="5" min="1" max="25">
@@ -195,7 +209,8 @@
   <div class="status-bar" id="app-status">PWA Ready</div>
 
   <script>
-    // --- 1. INDEXEDDB ENGINE ---
+    // --- 1. INDEXEDDB let undoStack = [];
+    let undoStack = [];
     const DB_NAME = 'BilliardsScorekeeperDB';
     const DB_VERSION = 1;
     let db;
@@ -268,8 +283,56 @@
       inning: 1,
       p1Fouls: 0,
       p2Fouls: 0,
+      p1BreakRuns: 0,
+      p2BreakRuns: 0,
       pocketedBalls: []
     };
+    function saveCurrentMatch() {
+    localStorage.setItem(
+        "rackscore-current-match",
+        JSON.stringify(matchState)
+        );
+    }
+
+    function loadCurrentMatch() {
+      const saved = localStorage.getItem("rackscore-current-match");
+      if (saved) {
+        matchState = JSON.parse(saved);
+      }
+    }
+
+    function saveForUndo() {
+        undoStack.push(JSON.stringify(matchState));
+
+        if (undoStack.length > 50) {
+            undoStack.shift();
+        }
+    }
+
+    function undoLastAction() {
+        if (!undoStack.length) {
+            alert("Nothing to undo");
+            return;
+        }
+
+        matchState = JSON.parse(
+            undoStack.pop()
+        );
+
+        updateUI();
+        renderRack();
+        saveCurrentMatch();
+    }
+
+    function checkRaceWinner() {
+
+        if (
+            matchState.p1Score >= matchState.raceTo ||
+            matchState.p2Score >= matchState.raceTo
+        ) {
+            finishMatch();
+        }
+    }
 
     function showTab(tabId, btnEl) {
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -367,8 +430,17 @@
       setActivePlayer(matchState.activePlayer);
     }
 
-    async function finishMatch() {
-      const winner = matchState.p1Score >= matchState.p2Score ? matchState.p1Name : matchState.p2Name;
+    async function finishMatch() {let winner;
+    if (matchState.p1Score > matchState.p2Score) {
+      winner = matchState.p1Name;
+    }
+    else if (matchState.p2Score > matchState.p1Score) {
+        winner = matchState.p2Name;
+    }
+    else {
+        winner = "Draw";
+    }
+
       const matchRecord = {
         gameType: matchState.gameType,
         p1Name: matchState.p1Name,
@@ -385,25 +457,22 @@
       showTab('tab-history');
     }
 
-    // --- 3. SERVICE WORKER REGISTRATION ---
-    if ('serviceWorker' in navigator) {
-      const swCode = `
-        const CACHE_NAME = 'billiards-pwa-v2';
-        self.addEventListener('install', (e) => self.skipWaiting());
-        self.addEventListener('activate', (e) => clients.claim());
-        self.addEventListener('fetch', (e) => {
-          e.respondWith(caches.match(e.request).then(res => res || fetch(e.request).catch(() => new Response("Offline"))));
+    // --- 3. SERVICE WORKER if ("serviceWorker" in navigator) {
+
+    navigator.serviceWorker
+        .register("./sw.js")
+        .then(() => {
+          document.getElementById(
+            "app-status"
+            ).innerText =
+            "Offline Mode Active";
+        })
+        .catch(() => {
+          document.getElementById(
+            "app-status"
+            ).innerText =
+            "Standard Mode";
         });
-      `;
-      try {
-        const blob = new Blob([swCode], { type: 'text/javascript' });
-        const blobUrl = URL.createObjectURL(blob);
-        navigator.serviceWorker.register(blobUrl)
-          .then(() => { document.getElementById('app-status').innerText = 'PWA Offline Mode Active'; })
-          .catch(() => { document.getElementById('app-status').innerText = 'Local Storage Mode Active'; });
-      } catch (e) {
-        document.getElementById('app-status').innerText = 'Local Storage Mode Active';
-      }
     }
 
     // Initialize state
