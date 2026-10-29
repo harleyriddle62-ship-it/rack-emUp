@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Billiards Scorekeeper PWA</title>
 
-  <!-- Embedded Web App Manifest for Mobile Home Screen Installation -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"RackScore PWA","short_name":"RackScore","description":"Offline-first 8-ball %26 9-ball match scoring app","start_url":"./","display":"standalone","background_color":"%230d1b1e","theme_color":"%231b4d3e"}'>
+  <link rel="manifest" href='data:application/manifest+json,{"name":"RackScore PWA","short_name":"RackScore","description":"Offline-first 8-ball & 9-ball match scoring app","start_url":"./","display":"standalone","background_color":"#12181b","theme_color":"#1b4d3e"}' />
 
   <style>
     :root {
@@ -20,8 +19,21 @@
       --danger: #ff2e63;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); display: flex; flex-direction: column; min-height: 100vh; padding: 12px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 12px;
+    }
 
     header {
       background: var(--felt-green);
@@ -31,56 +43,186 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
       margin-bottom: 12px;
     }
-    header h1 { font-size: 1.4rem; color: var(--gold); letter-spacing: 1px; }
-    header p { font-size: 0.8rem; opacity: 0.8; }
 
-    .nav-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-    .tab-btn {
-      flex: 1; padding: 10px; border: none; background: var(--card-bg); color: var(--text);
-      border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--gold);
+      letter-spacing: 1px;
     }
-    .tab-btn.active { background: var(--felt-green); color: var(--gold); border: 1px solid var(--gold); }
 
-    .view { display: none; }
-    .view.active { display: block; }
+    header p {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
 
-    .card { background: var(--card-bg); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #2a343d; }
-    .card h2 { font-size: 1.1rem; color: var(--gold); margin-bottom: 12px; border-bottom: 1px solid #33414d; padding-bottom: 6px; }
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
 
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.85rem; margin-bottom: 4px; }
-    .form-group input, .form-group select {
-      width: 100%; padding: 10px; background: #0f1418; border: 1px solid #33414d;
-      color: #fff; border-radius: 6px; font-size: 1rem;
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: var(--card-bg);
+      color: var(--text);
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--felt-green);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .card {
+      background: var(--card-bg);
+      padding: 16px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #2a343d;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+      border-bottom: 1px solid #33414d;
+      padding-bottom: 6px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 4px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 10px;
+      background: #0f1418;
+      border: 1px solid #33414d;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 1rem;
     }
 
     .btn {
-      width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem;
-      font-weight: bold; cursor: pointer; background: var(--accent); color: #fff; transition: 0.2s;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: var(--accent);
+      color: #fff;
+      transition: 0.2s;
     }
-    .btn:active { transform: scale(0.98); }
-    .btn-danger { background: var(--danger); }
-    .btn-green { background: var(--felt-green); color: var(--gold); border: 1px solid var(--gold); }
 
-    /* Scoreboard Grid */
-    .scoreboard { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-green {
+      background: var(--felt-green);
+      color: var(--gold);
+      border: 1px solid var(--gold);
+    }
+
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
     .player-box {
-      background: var(--felt-dark); padding: 14px; border-radius: 8px; text-align: center;
-      border: 2px solid transparent; cursor: pointer;
+      background: var(--felt-dark);
+      padding: 14px;
+      border-radius: 8px;
+      text-align: center;
+      border: 2px solid transparent;
+      cursor: pointer;
     }
-    .player-box.active { border-color: var(--gold); background: #143d31; }
-    .player-name { font-size: 1.1rem; font-weight: bold; margin-bottom: 6px; }
-    .player-score { font-size: 2.8rem; font-weight: 800; color: var(--gold); line-height: 1; margin: 8px 0; }
-    .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 4px; border: none; cursor: pointer; margin: 2px; }
 
-    /* Pool Ball Visualization */
-    .balls-rack { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin: 12px 0; }
-    .ball {
-      width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center;
-      justify-content: center; font-weight: bold; font-size: 0.9rem; color: #000;
-      cursor: pointer; user-select: none; box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5);
+    .player-box.active {
+      border-color: var(--gold);
+      background: #143d31;
     }
-    .ball.pocketed { opacity: 0.2; filter: grayscale(1); }
+
+    .player-name {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .player-score {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+      margin: 8px 0;
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      margin: 2px;
+    }
+
+    .balls-rack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      justify-content: center;
+      margin: 12px 0;
+    }
+
+    .ball {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.9rem;
+      color: #000;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5);
+    }
+
+    .ball.pocketed {
+      opacity: 0.2;
+      filter: grayscale(1);
+    }
+
     .ball-1 { background: #ffd700; }
     .ball-2 { background: #0055ff; color: #fff; }
     .ball-3 { background: #ff3333; color: #fff; }
@@ -98,15 +240,28 @@
     .ball-15 { background: repeating-linear-gradient(0deg, #800080, #800080 8px, #fff 8px, #fff 16px); color:#fff; }
 
     .history-item {
-      padding: 10px; border-bottom: 1px solid #2a343d; font-size: 0.85rem;
-      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #2a343d;
+      font-size: 0.85rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .history-item:last-child { border-bottom: none; }
-    .status-bar { font-size: 0.75rem; text-align: center; color: #888; margin-top: auto; padding: 6px; }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .status-bar {
+      font-size: 0.75rem;
+      text-align: center;
+      color: #888;
+      margin-top: auto;
+      padding: 6px;
+    }
   </style>
 </head>
 <body>
-
   <header>
     <h1>🎱 RACKSCORE PWA</h1>
     <p id="game-subtitle">8-BALL (Race to 5)</p>
@@ -118,7 +273,6 @@
     <button class="tab-btn" onclick="showTab('tab-history', this)">History</button>
   </div>
 
-  <!-- VIEW 1: ACTIVE MATCH -->
   <div id="tab-match" class="view active">
     <div class="scoreboard">
       <div id="box-p1" class="player-box active" onclick="setActivePlayer(1)">
@@ -150,16 +304,11 @@
         <button class="btn" style="background:#33414d;" onclick="nextInning()">Switch Turn / End Inning</button>
         <button class="btn btn-danger" onclick="recordFoul()">Record Foul</button>
       </div>
-      <button class="btn btn-green" onclick="finishMatch()">Finish Match & Save Record</button>
-      <button class="btn" style="margin-top:10px;background:#666;" onclick="undoLastAction()">
-        Undo Last Action
-      </button>
-
+      <button class="btn btn-green" onclick="finishMatch()">Finish Match &amp; Save Record</button>
+      <button class="btn" style="margin-top:10px;background:#666;" onclick="undoLastAction()">Undo Last Action</button>
     </div>
-    
   </div>
 
-  <!-- VIEW 2: NEW MATCH SETUP -->
   <div id="tab-setup" class="view">
     <div class="card">
       <h2>Match Setup</h2>
@@ -172,30 +321,20 @@
       </div>
       <div class="form-group">
         <label>Player 1 Name</label>
-        <input type="text" id="setup-p1" value="Player
-          <div>
-          Fouls:
-          <span id="disp-p1-fouls">0</span>
-      </div>
+        <input type="text" id="setup-p1" value="Player 1" />
       </div>
       <div class="form-group">
         <label>Player 2 Name</label>
-        <input type="text" id="setup-p2" value="Player 2">
+        <input type="text" id="setup-p2" value="Player 2" />
       </div>
-      <div>
-        Fouls:
-        <span id="disp-p2-fouls">0</span>
-      </div>
-
       <div class="form-group">
         <label>Target Race (Racks to Win)</label>
-        <input type="number" id="setup-race" value="5" min="1" max="25">
+        <input type="number" id="setup-race" value="5" min="1" max="25" />
       </div>
       <button class="btn btn-green" onclick="startNewMatch()">Start New Match</button>
     </div>
   </div>
 
-  <!-- VIEW 3: MATCH HISTORY -->
   <div id="tab-history" class="view">
     <div class="card">
       <h2>Match History (IndexedDB)</h2>
@@ -209,69 +348,11 @@
   <div class="status-bar" id="app-status">PWA Ready</div>
 
   <script>
-    // --- 1. INDEXEDDB let undoStack = [];
     let undoStack = [];
     const DB_NAME = 'BilliardsScorekeeperDB';
     const DB_VERSION = 1;
     let db;
 
-    function initDB() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onupgradeneeded = (e) => {
-          const database = e.target.result;
-          if (!database.objectStoreNames.contains('matches')) {
-            database.createObjectStore('matches', { keyPath: 'id', autoIncrement: true });
-          }
-        };
-        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
-        request.onerror = (e) => reject(e.target.error);
-      });
-    }
-
-    async function saveMatchToDB(matchData) {
-      if (!db) await initDB();
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction('matches', 'readwrite');
-        const store = tx.objectStore('matches');
-        store.add(matchData);
-        tx.oncomplete = () => { loadHistory(); resolve(); };
-        tx.onerror = (e) => reject(e.target.error);
-      });
-    }
-
-    async function clearHistory() {
-      if (!confirm("Are you sure you want to clear all match history?")) return;
-      if (!db) await initDB();
-      const tx = db.transaction('matches', 'readwrite');
-      tx.objectStore('matches').clear();
-      tx.oncomplete = () => loadHistory();
-    }
-
-    async function loadHistory() {
-      if (!db) await initDB();
-      const tx = db.transaction('matches', 'readonly');
-      const store = tx.objectStore('matches');
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const listContainer = document.getElementById('history-list');
-        const matches = req.result ? req.result.reverse() : [];
-        if (matches.length === 0) {
-          listContainer.innerHTML = '<p style="font-size:0.85rem; color:#888;">No saved matches found.</p>';
-          return;
-        }
-        listContainer.innerHTML = matches.map(m => `
-          <div class="history-item">
-            <div>
-              <b style="color:var(--gold)">${m.gameType.toUpperCase()}</b>: ${m.p1Name} (${m.p1Score}) vs ${m.p2Name} (${m.p2Score})<br>
-              <span style="color:#aaa;">Winner: <b>${m.winner}</b> | Innings: ${m.innings} | ${new Date(m.timestamp).toLocaleDateString()}</span>
-            </div>
-          </div>
-        `).join('');
-      };
-    }
-
-    // --- 2. MATCH STATE & CONTROLS ---
     let matchState = {
       gameType: '8-ball',
       p1Name: 'Player 1',
@@ -283,61 +364,133 @@
       inning: 1,
       p1Fouls: 0,
       p2Fouls: 0,
-      p1BreakRuns: 0,
-      p2BreakRuns: 0,
       pocketedBalls: []
     };
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+          const database = event.target.result;
+          if (!database.objectStoreNames.contains('matches')) {
+            database.createObjectStore('matches', { keyPath: 'id', autoIncrement: true });
+          }
+        };
+
+        request.onsuccess = (event) => {
+          db = event.target.result;
+          resolve(db);
+        };
+
+        request.onerror = (event) => {
+          reject(event.target.error);
+        };
+      });
+    }
+
+    async function saveMatchToDB(matchData) {
+      if (!db) await initDB();
+
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction('matches', 'readwrite');
+        const store = tx.objectStore('matches');
+        store.add(matchData);
+
+        tx.oncomplete = () => {
+          loadHistory();
+          resolve();
+        };
+
+        tx.onerror = (event) => {
+          reject(event.target.error);
+        };
+      });
+    }
+
+    async function clearHistory() {
+      if (!confirm('Are you sure you want to clear all match history?')) return;
+      if (!db) await initDB();
+
+      const tx = db.transaction('matches', 'readwrite');
+      tx.objectStore('matches').clear();
+      tx.oncomplete = () => loadHistory();
+    }
+
+    async function loadHistory() {
+      if (!db) await initDB();
+
+      const tx = db.transaction('matches', 'readonly');
+      const store = tx.objectStore('matches');
+      const req = store.getAll();
+
+      req.onsuccess = () => {
+        const listContainer = document.getElementById('history-list');
+        const matches = req.result ? req.result.reverse() : [];
+
+        if (matches.length === 0) {
+          listContainer.innerHTML = '<p style="font-size:0.85rem; color:#888;">No saved matches found.</p>';
+          return;
+        }
+
+        listContainer.innerHTML = matches.map((m) => `
+          <div class="history-item">
+            <div>
+              <b style="color:var(--gold)">${m.gameType.toUpperCase()}</b>:
+              ${m.p1Name} (${m.p1Score}) vs ${m.p2Name} (${m.p2Score})<br>
+              <span style="color:#aaa;">Winner: <b>${m.winner}</b> | Innings: ${m.innings} | ${new Date(m.timestamp).toLocaleDateString()}</span>
+            </div>
+          </div>
+        `).join('');
+      };
+    }
+
     function saveCurrentMatch() {
-    localStorage.setItem(
-        "rackscore-current-match",
-        JSON.stringify(matchState)
-        );
+      localStorage.setItem('rackscore-current-match', JSON.stringify(matchState));
     }
 
     function loadCurrentMatch() {
-      const saved = localStorage.getItem("rackscore-current-match");
+      const saved = localStorage.getItem('rackscore-current-match');
       if (saved) {
-        matchState = JSON.parse(saved);
+        try {
+          matchState = JSON.parse(saved);
+        } catch (error) {
+          console.warn('Unable to load saved match state.', error);
+        }
       }
     }
 
     function saveForUndo() {
-        undoStack.push(JSON.stringify(matchState));
-
-        if (undoStack.length > 50) {
-            undoStack.shift();
-        }
+      undoStack.push(JSON.stringify(matchState));
+      if (undoStack.length > 50) {
+        undoStack.shift();
+      }
     }
 
     function undoLastAction() {
-        if (!undoStack.length) {
-            alert("Nothing to undo");
-            return;
-        }
+      if (!undoStack.length) {
+        alert('Nothing to undo');
+        return;
+      }
 
-        matchState = JSON.parse(
-            undoStack.pop()
-        );
-
-        updateUI();
-        renderRack();
-        saveCurrentMatch();
+      matchState = JSON.parse(undoStack.pop());
+      updateUI();
+      renderRack();
+      saveCurrentMatch();
     }
 
     function checkRaceWinner() {
-
-        if (
-            matchState.p1Score >= matchState.raceTo ||
-            matchState.p2Score >= matchState.raceTo
-        ) {
-            finishMatch();
-        }
+      if (matchState.p1Score >= matchState.raceTo || matchState.p2Score >= matchState.raceTo) {
+        finishMatch();
+      }
     }
 
     function showTab(tabId, btnEl) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach((view) => view.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach((button) => button.classList.remove('active'));
+
       document.getElementById(tabId).classList.add('active');
+
       if (btnEl) {
         btnEl.classList.add('active');
       } else {
@@ -346,14 +499,17 @@
         if (tabId === 'tab-setup') tabs[1].classList.add('active');
         if (tabId === 'tab-history') tabs[2].classList.add('active');
       }
-      if (tabId === 'tab-history') loadHistory();
+
+      if (tabId === 'tab-history') {
+        loadHistory();
+      }
     }
 
     function startNewMatch() {
       matchState.gameType = document.getElementById('setup-game').value;
       matchState.p1Name = document.getElementById('setup-p1').value.trim() || 'Player 1';
       matchState.p2Name = document.getElementById('setup-p2').value.trim() || 'Player 2';
-      matchState.raceTo = parseInt(document.getElementById('setup-race').value) || 5;
+      matchState.raceTo = parseInt(document.getElementById('setup-race').value, 10) || 5;
       matchState.p1Score = 0;
       matchState.p2Score = 0;
       matchState.activePlayer = 1;
@@ -364,6 +520,7 @@
 
       updateUI();
       renderRack();
+      saveCurrentMatch();
       showTab('tab-match');
     }
 
@@ -374,26 +531,40 @@
       document.getElementById('disp-turn').innerText = pNum === 1 ? matchState.p1Name : matchState.p2Name;
     }
 
-    function addPoint(pNum, ev) {
-      if (ev && ev.stopPropagation) ev.stopPropagation();
-      if (pNum === 1) matchState.p1Score++;
-      else matchState.p2Score++;
+    function addPoint(pNum, event) {
+      if (event && event.stopPropagation) event.stopPropagation();
+      saveForUndo();
 
-      // Clear rack for new rack
+      if (pNum === 1) {
+        matchState.p1Score++;
+      } else {
+        matchState.p2Score++;
+      }
+
       matchState.pocketedBalls = [];
       renderRack();
       updateUI();
+      saveCurrentMatch();
+      checkRaceWinner();
     }
 
     function nextInning() {
+      saveForUndo();
       matchState.inning++;
       setActivePlayer(matchState.activePlayer === 1 ? 2 : 1);
       updateUI();
+      saveCurrentMatch();
     }
 
     function recordFoul() {
-      if (matchState.activePlayer === 1) matchState.p1Fouls++;
-      else matchState.p2Fouls++;
+      saveForUndo();
+
+      if (matchState.activePlayer === 1) {
+        matchState.p1Fouls++;
+      } else {
+        matchState.p2Fouls++;
+      }
+
       const playerName = matchState.activePlayer === 1 ? matchState.p1Name : matchState.p2Name;
       alert(`Foul recorded for ${playerName}! Switching turn.`);
       nextInning();
@@ -402,22 +573,30 @@
     function renderRack() {
       const rack = document.getElementById('rack-container');
       rack.innerHTML = '';
+
       const totalBalls = matchState.gameType === '8-ball' ? 15 : 9;
 
       for (let i = 1; i <= totalBalls; i++) {
         const ball = document.createElement('div');
         ball.className = `ball ball-${i} ${matchState.pocketedBalls.includes(i) ? 'pocketed' : ''}`;
         ball.innerText = i;
-        ball.onclick = function() { toggleBall(i); };
+        ball.onclick = () => toggleBall(i);
         rack.appendChild(ball);
       }
     }
 
     function toggleBall(ballNum) {
+      saveForUndo();
+
       const idx = matchState.pocketedBalls.indexOf(ballNum);
-      if (idx > -1) matchState.pocketedBalls.splice(idx, 1);
-      else matchState.pocketedBalls.push(ballNum);
+      if (idx > -1) {
+        matchState.pocketedBalls.splice(idx, 1);
+      } else {
+        matchState.pocketedBalls.push(ballNum);
+      }
+
       renderRack();
+      saveCurrentMatch();
     }
 
     function updateUI() {
@@ -430,16 +609,14 @@
       setActivePlayer(matchState.activePlayer);
     }
 
-    async function finishMatch() {let winner;
-    if (matchState.p1Score > matchState.p2Score) {
-      winner = matchState.p1Name;
-    }
-    else if (matchState.p2Score > matchState.p1Score) {
+    async function finishMatch() {
+      let winner = 'Draw';
+
+      if (matchState.p1Score > matchState.p2Score) {
+        winner = matchState.p1Name;
+      } else if (matchState.p2Score > matchState.p1Score) {
         winner = matchState.p2Name;
-    }
-    else {
-        winner = "Draw";
-    }
+      }
 
       const matchRecord = {
         gameType: matchState.gameType,
@@ -447,7 +624,7 @@
         p2Name: matchState.p2Name,
         p1Score: matchState.p1Score,
         p2Score: matchState.p2Score,
-        winner: winner,
+        winner,
         innings: matchState.inning,
         timestamp: Date.now()
       };
@@ -457,28 +634,30 @@
       showTab('tab-history');
     }
 
-    // --- 3. SERVICE WORKER if ("serviceWorker" in navigator) {
-
-    navigator.serviceWorker
-        .register("./sw.js")
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('./sw.js')
         .then(() => {
-          document.getElementById(
-            "app-status"
-            ).innerText =
-            "Offline Mode Active";
+          document.getElementById('app-status').innerText = 'Offline Mode Active';
         })
         .catch(() => {
-          document.getElementById(
-            "app-status"
-            ).innerText =
-            "Standard Mode";
+          document.getElementById('app-status').innerText = 'Standard Mode';
         });
     }
 
-    // Initialize state
-    initDB().then(() => loadHistory());
-    updateUI();
-    renderRack();
+    async function bootstrap() {
+      await initDB();
+      loadCurrentMatch();
+      updateUI();
+      renderRack();
+      loadHistory();
+      document.getElementById('setup-game').value = matchState.gameType;
+      document.getElementById('setup-p1').value = matchState.p1Name;
+      document.getElementById('setup-p2').value = matchState.p2Name;
+      document.getElementById('setup-race').value = matchState.raceTo;
+    }
+
+    bootstrap();
   </script>
 </body>
 </html>
